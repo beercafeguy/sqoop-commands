@@ -1,0 +1,35 @@
+#
+# Start options file
+#
+import
+--connect
+<jdbc url>
+--username
+<jdbc username>
+--password
+<jdbc password>
+--driver
+<driver>
+
+#
+# Remaining options should be specified in the command line.
+#
+
+
+Ex. Options file
+#
+# Start options file
+#
+import
+--connect
+"jdbc:mysql://ms.beercafeguy.com:3306/retail_db"
+--username
+"sqoopuser"
+--password
+"sqoop"
+--driver
+"com.mysql.jdbc.Driver"
+
+#
+# Remaining options should be specified in the command line.
+#
