@@ -10,4 +10,10 @@ Sqoop is a tool to import/export data between JDBC supported RDBMS systems like 
 
 ##### Wiki Links for repository
 
-* Importing MySQL table into HDFS in text format 
+* [Sqoop import using options file](https://github.com/beercafeguy/sqoop-commands/wiki/Sqoop-import-using-options-file)
+* [Run queries in RDBMS systems using sqoop](https://github.com/beercafeguy/sqoop-commands/wiki/Run-queries-in-RDBMS-systems-using-sqoop)
+* [List databases and tables using SQOOP](https://github.com/beercafeguy/sqoop-commands/wiki/List-databases-and-tables-using-SQOOP)
+* [Importing MySQL table into HDFS in text format](https://github.com/beercafeguy/sqoop-commands/wiki/Import-MySQL-table-into-HDFS-using-sqoop-import)
+* [Import from and RDBMS table without primary key](https://github.com/beercafeguy/sqoop-commands/wiki/Import-from-and-RDBMS-table-without-primary-key)
+* [Best practices for SQOOP split by](https://github.com/beercafeguy/sqoop-commands/wiki/Best-practices-for-SQOOP-split-by)
+
