@@ -1,0 +1,518 @@
+command to connect to mysql:
+
+mysql -u <user name> -h <hostname> -p
+show databases;
+use <database name>;
+show tables;
+select * from orders limit 10;
+
+
+JDBC URL in MYSQL: jdbc:mysql://<hostname>:<3306/port number>/<database name>
+
+jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/
+
+
+Correct location for MySQL jar file for sqoop: /var/lib/sqoop/
+
+sqoop help import
+sqoop import --help
+
+sqoop import -libjars <jar file location> \
+	--connect <jdbc url> \
+	--username <jdbc username> \
+	--password <jdbc password> \
+	--table <table name> \
+
+#sqoop import --options-file options_file.txt <other options>  
+
+# Command Format
+sqoop import (generic arguments) (command specific arguments)
+
+sqoop list-databases --connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--driver com.mysql.jdbc.Driver \
+-P
+
+## Above command will not work in SQOOP as this is not implemented in SQL Server
+
+#list databases
+sqoop list-databases --connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--driver com.mysql.jdbc.Driver \
+--password-file <password file path>
+
+#list tables
+sqoop list-tables --connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--driver com.mysql.jdbc.Driver \
+--password <password here>
+
+
+## Sqoop eval
+sqoop eval --connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--query "select count(*) from customers"
+
+
+## Sqoop eval
+sqoop eval --connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--query "insert into table values (\"Hem\",\"120\")"
+
+## We can pass any command inclusing DDL,DML etc using eval.
+
+## Sqoop import
+sqoop import --connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--table "customers" \
+--target-dir "/user/beercafeguy/data/azure/statusmetadata/" \
+-m 1 
+
+## If we don't have primery key in source table, we need to mention -m or --num-mappers and --split-by (if --num-mappers is more then 1)
+
+
+sqoop import --connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--table "customers" \
+--warehouse-dir "/user/beercafeguy/data/azure/" \
+--split-by status \
+--delete-target-dir \
+-m 2
+
+## Default delimiter in sqoop is comma (,)
+## Default number of mappers is 1
+## --delete-target-dir : to delete the dir if already exists
+
+
+sqoop import --connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--table "customers" \
+--warehouse-dir "/user/beercafeguy/data/azure/" \
+--split-by status \
+--append \
+-m 2
+
+
+# Split column should not have null values and it should be evenly distributed
+# If there are null values in split y column thoes will be ingored because NULL does not dome in > and less then conditions
+# Column is better to be indexed. Best option or sequence generated
+# 172198 records -> 4 mappers 
+if order item id -> 
+# Split on non numeric field is not allowed by default. That can be enabled by an option
+
+
+select * from order_items_nopk where order_itemid >=1 and order_itemid <=<uppper limit>
+
+sqoop import --connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--table "uav.incident" \
+--target-dir "/user/beercafeguy/data/azure/uav_incident/" \
+--split-by id \
+--num-mappers 10
+
+# If you any any reserved keyword as column name in table then --table will fail. We need to use --query with proper escape chars.
+
+
+sqoop import --connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--query "select id,createdon from uav.incident where \$CONDITIONS" \
+--target-dir "/user/beercafeguy/data/azure/uav_incident/" \
+--split-by id \
+--delete-target-dir \
+--num-mappers 10
+
+#There is an option with which I can direct sqoop that ->If there is no primary key in source table, just set --num-mappers to 1.
+#This is perticularly handy when we are not aware if there is a primery key or not.
+
+sqoop import \
+--connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--table "customers" \
+--target-dir "/user/beercafeguy/data/azure/uav_statusmetadata/" \
+--delete-target-dir \
+--autoreset-to-one-mapper
+
+
+# By default import data file format is --as-textfile
+
+sqoop import \
+--connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--table "customers" \
+--target-dir "/user/beercafeguy/data/azure/uav_statusmetadata/" \
+--delete-target-dir \
+--autoreset-to-one-mapper \
+--as-textfile
+
+
+# Import as parquet file
+sqoop import \
+--connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--table "customers" \
+--target-dir "/user/beercafeguy/data/azure/uav_statusmetadata/" \
+--delete-target-dir \
+--autoreset-to-one-mapper \
+--as-parquetfile
+
+
+# Import as avro file (pending)
+sqoop import \
+--connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--table "customers" \
+--target-dir "/user/beercafeguy/data/azure/uav_statusmetadata_avro/" \
+--delete-target-dir \
+--autoreset-to-one-mapper \
+--as-avrodatafile
+
+# Need to complete one table with --query and text column in split by
+# Compression formats with sqoop
+sqoop import \
+--connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--table "customers" \
+--target-dir "/user/beercafeguy/data/azure/uav_statusmetadata_compress/" \
+--compress \
+--num-mappers 1
+
+# We can not open .gz files directly. We need to copy them to local and unzip it
+
+sqoop import \
+--connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--table "customers" \
+--target-dir "/user/beercafeguy/data/azure/uav_statusmetadata_compress/" \
+--delete-target-dir \
+--compress \
+--compression-codec "org.apache.hadoop.io.compress.SnappyCodec" \
+--num-mappers 1
+
+
+# Read snappy data in hive
+
+
+
+# Custome Boundary Query
+
+sqoop import --connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--table "customers" \
+--warehouse-dir "/user/beercafeguy/data/azure/" \
+--boundary-query "select min(status),max(status) from customers where status is not null" \
+--delete-target-dir \
+--split-by status \
+-m 2
+
+# We can hardcode value in --boundary-query to reduce the calculation like 
+sqoop import --connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--table "customers" \
+--warehouse-dir "/user/beercafeguy/data/azure/" \
+--boundary-query "select 1,100 from customers" \
+--delete-target-dir \
+--split-by status \
+-m 2
+
+
+# Transform and filtering 
+# We can either use query or table (mutually exclussive)
+--columns 
+--query
+
+
+sqoop import \
+--connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--table "customers" \
+--columns State,Status \
+--split-by status \
+--num-mappers 2 \
+--target-dir "/user/beercafeguy/data/azure/uav_status_metadata_columns" \
+--delete-target-dir \
+--as-parquetfile
+
+
+#### Combinations are (--table and --columns) or --query
+#### $CONDITIONS is mandatory in --query option 
+sqoop import \
+--connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--query "select State,count(*) as ct from customers where \$CONDITIONS group by State" \
+--split-by State \
+--num-mappers 2 \
+--target-dir "/user/beercafeguy/data/azure/uav_status_metadata_query" \
+--delete-target-dir \
+--as-textfile
+
+
+#### Delimiters and NULL Handeling
+
+sqoop import \
+--connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--query "select State,count(*) as ct from customers where \$CONDITIONS group by State" \
+--split-by State \
+--target-dir "/user/beercafeguy/data/azure/uav_status_metadata_delimiter" \
+--delete-target-dir \
+--as-textfile \
+--fields-terminated-by '|' \
+-m 2
+
+sqoop import \
+--connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--query "select State,null as ct from customers where \$CONDITIONS" \
+--split-by State \
+--target-dir "/user/beercafeguy/data/azure/uav_status_metadata_null" \
+--delete-target-dir \
+--as-textfile \
+--fields-terminated-by '|' \
+--null-non-string '-1' \
+--null-string '' \
+-m 2
+
+
+--optionally-enclosed-by is used only when there is a encapsulation char is present in data
+
+
+# Incremental import in Sqoop
+# Delete Not directly possible
+sqoop import \
+--connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--query "select id,adobe_firstagentowner_entitytype,createdon,accountid,ownerid from uav.incident where \$CONDITIONS" \
+--num-mappers 10 \
+--target-dir "/user/beercafeguy/data/azure/uav_incident/" \
+--split-by Id \
+--delete-target-dir 
+
+1> Put where condition in query
+--where condition in query
+--where "createdon like '2018-01%'"
+
+
+###Official incremenal import
+# mode : Append (check column number) and Lastmodified (check column date)
+sqoop import \
+--connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--query "select id,adobe_firstagentowner_entitytype,createdon,accountid,ownerid from uav.incident where \$CONDITIONS" \
+--num-mappers 10 \
+#Incremental load colimns \
+--check-column modifiedon \
+--incremental append \
+--last-value '2014-02-28' \ 
+--target-dir "/user/beercafeguy/data/azure/uav_incident/" \
+--split-by Id \
+--delete-target-dir 
+
+
+
+# Sqoop job feature for import incremetally
+# Import into hive tables
+# Simple hive import
+sqoop import \
+--connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--hive-import \
+--hive-database ce_analytics \
+--hive-table beercafeguy_uav_statusmetadata \
+--num-mappers 2 \
+--split-by Status \
+--hive-overwrite \
+--table customers 
+
+
+
+sqoop import \
+--connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--hive-import \
+--hive-database ce_analytics \
+--hive-table "beercafeguy_uav_statusmetadata" \
+--num-mappers 2 \
+--split-by Status \
+#--hive-overwrite \
+--query "select * from customers where \$CONDITIONS" \
+--target-dir "/tmp/beercafeguy/statusmetadata"
+
+
+# --target-dir is mandatory with --query
+# Default delimiter is ^A
+# Default hive behaviuor is append
+
+
+
+sqoop import \
+--connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--hive-import \
+--hive-database ce_analytics \
+--hive-table "beercafeguy_uav_statusmetadata" \
+--num-mappers 2 \
+--split-by Status \
+--query "select * from customers where \$CONDITIONS" \
+--target-dir "/tmp/beercafeguy/statusmetadata"
+
+# If table already exists, it should fail
+sqoop import \
+--connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--hive-import \
+--hive-database ce_analytics \
+--hive-table "beercafeguy_uav_statusmetadata" \
+--num-mappers 2 \
+--split-by Status \
+--query "select * from customers where \$CONDITIONS" \
+--target-dir "/tmp/beercafeguy/statusmetadata" \
+--create-hive-table
+
+# with --create-hive-table, if table already exists, job will fail
+# Avro data and sequence files can not be imported in hive
+# --null-string '\\N' --null-non-string are mandaory for hive import to load data properly
+
+
+# Sqoop import all tables.
+
+sqoop import \
+--connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--warehouse-dir "/user/beercafeguy/data/"
+
+
+
+sqoop import --connect "jdbc:mysql://ms.beercafeguy.com:3306/retail_db" --username sqoopuser --password sqoop --driver "com.mysql.jdbc.Driver" --table categories --target-dir "/user/beercafeguy/data/retail_db/categories_text_delim" --fields-terminated-by '|' --delete-target-dir --num-mappers 4
+
+
+sqoop import --connect "jdbc:mysql://ms.beercafeguy.com:3306/retail_db" --username sqoopuser --password sqoop --driver "com.mysql.jdbc.Driver" --table categories --target-dir "/user/beercafeguy/data/retail_db/categories_parquet" --fields-terminated-by '|' --delete-target-dir --as-parquetfile --num-mappers 4
+
+
+
+sqoop import --connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--table "uav.contact" \
+--target-dir "/user/beercafeguy/data/azure/contact/" \
+-m 1 
+
+
+
+
+sqoop import-all-tables \
+  --num-mappers 1 \
+  --connect "jdbc:mysql://ms.beercafeguy.com:3306/retail_db" \
+  --username=sqoopuser \
+  --password=sqoop \
+  --hive-import \
+  --hive-overwrite \
+  --hive-database ce_analytics \
+  --create-hive-table \
+  --as-parquetfile
+
+
+
+sqoop import-all-tables \
+  -Dhive.metastore.uris=thrift://<metastore URI from hive-site.xml>, \
+  --num-mappers 1 \
+  --connect "jdbc:mysql://ms.beercafeguy.com:3306/retail_db" \
+  --username=sqoopuser \
+  --password=sqoop \
+  --hive-import \
+  --hive-overwrite \
+  --create-hive-table
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

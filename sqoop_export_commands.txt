@@ -1,0 +1,127 @@
+CREATE USER 'sqoopuser'@'%' IDENTIFIED BY 'sqoop';
+
+GRANT ALL PRIVILEGES ON * . * TO 'sqoop_user'@'%';
+
+FLUSH PRIVILEGES;
+
+source /root/beercafeguy/data/retail_db.sql;
+
+
+sqoop eval --connect "jdbc:mysql://ms.beercafeguy.com:3306/analytics" --username sqoopuser --password sqoop --query "select * from employee limit 2"
+
+sqoop eval --connect "jdbc:mysql://ms.beercafeguy.com:3306/retail_db" --username sqoopuser --password sqoop --query "create table test(id int)"
+
+sqoop eval --connect "jdbc:mysql://ms.beercafeguy.com:3306/retail_db" --username sqoopuser --password sqoop --query "insert into test values (100)"
+
+sqoop eval --connect "jdbc:mysql://ms.beercafeguy.com:3306/retail_db" --username sqoopuser --password sqoop --query "select * from test"
+
+sqoop eval --connect "jdbc:mysql://ms.beercafeguy.com:3306/retail_db" --username sqoopuser --password sqoop --query "describe categories"
+
+
+In case of sqoop export, RDBMS table should be present
+
+create table categories_export(category_id int,category_department_id int,category_name varchar(50))
+
+create table categories_export_extra_column(category_id int,category_department_id int,category_name varchar(50),extra_column varchar(10))
+
+
+/user/beercafeguy/data/retail_db/categories_text_deli
+
+sqoop export \
+--connect "jdbc:mysql://ms.beercafeguy.com:3306/retail_export" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--export-dir "/user/beercafeguy/data/retail_db/categories_text_delim" \
+--input-fields-terminated-by '|' \
+--table categories_export \
+--num-mappers 2
+
+
+# Column mapping 
+--columns # COlumns should match source data structure in HDFS
+--columns # Columns which are not being passed should be NULLABLE
+# If number of columns are different in source and target, then also --columns is mandatory with --table
+
+
+sqoop export \
+--connect "jdbc:mysql://ms.beercafeguy.com:3306/retail_export" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--export-dir "/user/beercafeguy/data/retail_db/categories_text_delim" \
+--input-fields-terminated-by '|' \
+--table categories_export_extra_column \
+--columns category_id,category_department_id,category_name \
+--num-mappers 2
+
+
+sqoop export \
+--connect "jdbc:mysql://ms.beercafeguy.com:3306/retail_export" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--export-dir "/user/beercafeguy/data/retail_db/categories_text_delim" \
+--input-fields-terminated-by '|' \
+--table categories_export_one_column \
+--columns category_id \
+--num-mappers 2
+
+
+
+sqoop export \
+--connect "jdbc:mysql://ms.beercafeguy.com:3306/retail_export" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--export-dir "/user/beercafeguy/data/retail_db/categories_text_delim" \
+--input-fields-terminated-by '|' \
+--table categories_export_only_column \
+--columns category_name \
+--num-mappers 2
+
+
+sqoop export \
+--connect "jdbc:mysql://ms.beercafeguy.com:3306/retail_export" \
+--username sqoopuser \
+--password sqoop \
+--driver "com.mysql.jdbc.Driver" \
+--export-dir "/user/beercafeguy/data/retail_db/categories_parquet" \
+--table categories_export \
+--num-mappers 2
+
+# Call procedure from Sqoop
+--call 
+
+# This is used for upsert
+# Update data
+--update-key
+--update-mode (updateonly/allowinsert)
+
+# In my experience Updates using sqoops are quite slow.
+
+sqoop export --connect "jdbc:mysql://ms.beercafeguy.com:3306/retail_export" --username sqoopuser --password sqoop --driver "com.mysql.jdbc.Driver" --table customers_upsert --export-dir "/user/beercafeguy/data/retail_customers/" \
+--update-key customer_id \
+--update-mode updateonly
+
+
+
+# Stage tables in SQOOP
+# Stage tables should be available in advance
+# Saves you from data corruption on sqoop export
+--staging-table
+# If export will be successful, stage table will be cleared even if --clear-staging-table is not set
+--clear-staging-table <for clearing staging table before start the job and after completion of job>
+
+
+
+
+
+
+
+
+
+
+
+
+
