@@ -25,6 +25,10 @@ sqoop import -libjars <jar file location> \
 
 #sqoop import --options-file options_file.txt <other options>  
 
+sqoop --options-file jdbc_details.txt \
+	--table products \
+	--target-dir "/user/beercafeguy/data/retail_db/products_text"
+
 # Command Format
 sqoop import (generic arguments) (command specific arguments)
 
@@ -75,8 +79,6 @@ sqoop import --connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
 -m 1 
 
 ## If we don't have primery key in source table, we need to mention -m or --num-mappers and --split-by (if --num-mappers is more then 1)
-
-
 sqoop import --connect "jdbc:mysql://ms1.beercafeguy.com:3306/retail_db/" \
 --username sqoopuser \
 --password sqoop \

@@ -1,0 +1,16 @@
+#
+# Start options file
+#
+import
+--connect
+jdbc:mysql://ms.beercafeguy.com:3306/retail_db
+--username
+sqoopuser
+--password
+sqoop
+--driver
+com.mysql.jdbc.Driver
+
+#
+# Remaining options should be specified in the command line.
+#
